@@ -6,3 +6,6 @@ scikit-learn==1.5.2
 
 # Optional but useful for time/date operations
 python-dateutil==2.9.0.post0
+
+# Streamlit for UI
+streamlit==1.31.1
