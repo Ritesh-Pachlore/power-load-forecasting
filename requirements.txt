@@ -4,6 +4,9 @@ numpy==1.26.4
 matplotlib==3.9.2
 scikit-learn==1.5.2
 
+# Machine Learning Models
+xgboost==2.0.3
+
 # Optional but useful for time/date operations
 python-dateutil==2.9.0.post0
 

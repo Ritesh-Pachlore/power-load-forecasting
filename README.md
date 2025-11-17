@@ -1,146 +1,193 @@
 # Power Load Forecasting Project
 
-This project implements machine learning models to forecast power demand based on historical load data and weather conditions. The project includes comprehensive data preprocessing, model development, and evaluation phases.
+A machine learning application that predicts electricity power load demand based on temporal and weather features using XGBoost model with an interactive Streamlit UI.
 
 ## Project Structure
 
 ```
-├── dataset/
-│   └── _PDB_Load_History.csv    # Raw power demand load history data
-├── notebooks/
-│   ├── power_demand_preprocessing.ipynb    # Data preprocessing notebook
-│   ├── model_training_and_evaluation.ipynb # Model development notebook
-│   ├── preprocessing_summary.json          # Preprocessing statistics
-│   └── processed_load_data.csv            # Preprocessed dataset
-├── saved_models/
-│   ├── best_model.joblib        # Serialized best performing model
-│   └── model_metadata.json      # Model parameters and performance metrics
-└── requirements.txt             # Python dependencies
+power-load-forecasting/
+├── app.py                          # Main Streamlit application for predictions
+├── requirements.txt                # Python dependencies
+├── README.md                       # Project documentation
+├── README_STREAMLIT.md             # Streamlit UI guide
+├── src/
+│   ├── train.py                   # Model training script
+│   └── preprocess.py              # Data preprocessing module
+├── data/
+│   └── processed_load_data.csv    # Preprocessed dataset with 6 features
+├── models/
+│   ├── best_model.pkl            # Trained XGBoost model
+│   ├── model_info.json           # Model metrics and feature importance
+│   └── model_comparison.csv      # Comparison of multiple trained models
+├── Original_dataset/              # Original raw data files
+└── Prepossesing_code/            # Legacy preprocessing notebooks
 ```
 
-## Models Implemented
+## Key Features
 
-1. **Baseline Model**
+✨ **Machine Learning Model**
+- Algorithm: XGBoost Regressor
+- Training R² Score: 0.9420
+- Mean Absolute Error: 0.0319
+- Predicts normalized power demand (0-1 scale)
 
-   - Linear Regression
-   - Simple but interpretable
-   - Provides performance benchmark
+📊 **Model Input Features** (6 features)
+- Temperature (°C)
+- Hour of Day (0-23)
+- Day of Week (Monday-Sunday)
+- Month (January-December)
+- Weekend Flag (0=Weekday, 1=Weekend)
+- Season (Winter, Spring, Summer, Fall)
 
-2. **Advanced Models**
+🎯 **Feature Importance Ranking**
+1. **Is Weekend** - 41.86% (Most Important)
+2. **Hour** - 29.24%
+3. **Season** - 15.76%
+4. **Temperature** - 10.74%
+5. **Month** - 1.83%
+6. **Weekday** - 0.57%
 
-   - Random Forest Regressor
-   - LSTM Neural Network
-   - Captures non-linear relationships and temporal patterns
+## Installation
 
-3. **Model Performance**
-   - Evaluation metrics: MAE, RMSE, R², MAPE
-   - Feature importance analysis
-   - Residual analysis
-   - Time series visualization of predictions
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/Ritesh-Pachlore/power-load-forecasting.git
+   cd power-load-forecasting
+   ```
 
-## Features
+2. **Create Python environment (recommended):**
+   ```bash
+   conda create -n powerload_env python=3.11
+   conda activate powerload_env
+   ```
 
-The preprocessing pipeline includes:
+3. **Install dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-- Time-based feature engineering (date, year, month, day, weekday, hour)
-- Power demand measurements processing
-- Temperature data processing
-- Outlier detection and removal using IQR method
-- Feature scaling using MinMaxScaler
-- Train-test split (80-20)
+## Usage
 
-## Generated Features
-
-- Datetime features
-- Weekend indicator
-- Seasonal information
-- Scaled numerical features
-
-## Visualizations
-
-- Power demand over time
-- Temperature vs demand correlation
-- Weekday demand patterns
-- Hourly demand patterns
-- Monthly demand patterns
-- Outlier analysis
-
-## Setup and Usage
-
-1. Clone the repository:
+### Option 1: Interactive Streamlit UI (Recommended)
 
 ```bash
-git clone https://github.com/Ritesh-Pachlore/power-load-forecasting.git
+streamlit run app.py
 ```
 
-2. Install required packages:
+Then open your browser to `http://localhost:8501`
 
-```bash
-pip install -r requirements.txt
-```
+**Features:**
+- 🔮 Single Prediction Tab: Input parameters and get instant predictions
+- 📈 Feature Importance Tab: Visualize model insights with charts
+- ℹ️ About Tab: Learn about the model and features
 
-3. Run the notebooks in order:
-
-```bash
-jupyter notebook notebooks/power_demand_preprocessing.ipynb
-jupyter notebook notebooks/model_training_and_evaluation.ipynb
-```
-
-## Making Predictions
-
-To use the trained model for predictions:
+### Option 2: Command Line Prediction
 
 ```python
-import joblib
+import pickle
+import pandas as pd
 
-# Load the model
-model = joblib.load('saved_models/best_model.joblib')
+# Load model
+with open('models/best_model.pkl', 'rb') as f:
+    model = pickle.load(f)
 
-# Prepare features (must include: temperature, hour, weekday, month, is_weekend, season)
-features_df = pd.DataFrame({
-    'temperature': [0.5],  # scaled temperature
-    'hour': [12],         # hour of day (0-23)
-    'weekday': [1],       # day of week (0-6)
-    'month': [1],         # month (1-12)
-    'is_weekend': [0],    # 0 or 1
-    'season': [0]         # 0:Winter, 1:Spring, 2:Summer, 3:Fall
+# Prepare features
+input_data = pd.DataFrame({
+    'temperature': [0.5],    # normalized value 0-1
+    'hour': [14],            # 0-23
+    'weekday': [2],          # 0=Monday, 6=Sunday
+    'month': [5],            # 1-12
+    'is_weekend': [0],       # 0 or 1
+    'season': [1]            # 0=Winter, 1=Spring, 2=Summer, 3=Fall
 })
 
 # Make prediction
-prediction = model.predict(features_df)
+prediction = model.predict(input_data)
+print(f"Predicted power load: {prediction[0]:.4f}")
 ```
 
-## Output Files
+### Option 3: Train New Model
 
-1. **Preprocessed Data**
+```bash
+python src/train.py
+```
 
-   - `processed_load_data.csv`: Cleaned and feature-engineered dataset
-   - `preprocessing_summary.json`: Preprocessing statistics and parameters
+This will:
+- Load preprocessed data from `data/processed_load_data.csv`
+- Train multiple models (Linear, Ridge, Lasso, Random Forest, Gradient Boosting, ExtraTrees, XGBoost)
+- Save best model to `models/best_model.pkl`
+- Generate `models/model_info.json` with metrics
+- Create `models/model_comparison.csv` with all models' performance
 
-2. **Model Files**
-   - `best_model.joblib`: Serialized trained model
-   - `model_metadata.json`: Model configuration and performance metrics
+## Model Performance
 
-## Model Performance and Limitations
+| Metric | Value |
+|--------|-------|
+| R² Score | 0.9420 |
+| MAE | 0.0319 |
+| MSE | 0.0021 |
+| RMSE | 0.0457 |
+| Train Samples | 82,090 |
+| Test Samples | 20,523 |
 
-- Models capture daily and seasonal patterns effectively
-- Best performance achieved by Random Forest model
-- Key predictors: temperature, hour of day, and seasonal factors
-- Limitations include:
-  - Assumes similar patterns in future data
-  - May not capture extreme events
-  - Limited to available feature set
+## Dataset
+
+- **Total Samples**: 102,613 observations
+- **Time Period**: Historical power load data
+- **Features**: 6 engineered features (temperature, hour, weekday, month, weekend flag, season)
+- **Target**: Normalized power demand (0-1 scale)
+- **Train-Test Split**: 80-20
+
+## Technical Stack
+
+- **Backend**: Python 3.11+
+- **ML Library**: scikit-learn, XGBoost
+- **Web UI**: Streamlit
+- **Data Processing**: pandas, numpy
+- **Visualization**: matplotlib, plotly
+- **Serialization**: pickle, json
+
+## File Descriptions
+
+| File | Purpose |
+|------|---------|
+| `app.py` | Main Streamlit application with UI |
+| `src/train.py` | Model training pipeline |
+| `src/preprocess.py` | Data preprocessing utilities |
+| `models/best_model.pkl` | Trained XGBoost model |
+| `models/model_info.json` | Model metrics and metadata |
+| `data/processed_load_data.csv` | Preprocessed training data |
+
+## Tips for Best Results
+
+💡 **When Using Predictions:**
+- Weekend flag has highest impact (42%) on predictions
+- Hour of day is second most important (29%)
+- Predictions work best for typical weather conditions
+- Use actual temperature values for accurate forecasts
+
+⚠️ **Limitations:**
+- Model trained on historical patterns only
+- May not predict extreme events accurately
+- Assumes stable power grid patterns
+- Requires all 6 features for prediction
 
 ## Future Enhancements
 
-1. Additional Features:
+1. **Data**: Add humidity, wind speed, holidays, special events
+2. **Models**: Multi-step forecasting, uncertainty quantification
+3. **Features**: Real-time API integration, batch prediction
+4. **Monitoring**: Model performance tracking, drift detection
 
-   - Weather: humidity, wind speed, cloud cover
-   - Holidays and special events
-   - Economic indicators
+## Contributing
 
-2. Model Improvements:
-   - Ensemble methods
-   - Multi-step forecasting
-   - Online learning capabilities
-   - Uncertainty quantification
+Feel free to fork, modify, and submit pull requests!
+
+## License
+
+This project is open source and available under the MIT License.
+
+## Contact
+
+Created by Ritesh Pachlore  
+GitHub: https://github.com/Ritesh-Pachlore
