@@ -28,7 +28,7 @@ A complete web-based interface for the Power Load Forecasting model using Stream
 
 2. **Ensure the model files exist:**
    ```
-   saved_models/
+   models/
    ├── best_model.pkl
    └── model_info.json
    ```
@@ -81,7 +81,7 @@ Visualizes the importance of each feature in the model:
 ## Troubleshooting
 
 **Issue**: "Error loading model"
-- **Solution**: Ensure `best_model.pkl` and `model_info.json` exist in the `saved_models/` directory
+- **Solution**: Ensure `best_model.pkl` and `model_info.json` exist in the `models/` directory
 
 **Issue**: "ModuleNotFoundError: No module named 'streamlit'"
 - **Solution**: Run `pip install -r requirements.txt` to install all dependencies
@@ -95,8 +95,8 @@ Visualizes the importance of each feature in the model:
 Energy project/
 ├── app.py                          # Main Streamlit application
 ├── requirements.txt                # Python dependencies
-├── saved_models/
-│   ├── best_model.pkl            # Trained Random Forest model
+├── models/
+│   ├── best_model.pkl            # Trained XGBoost model
 │   └── model_info.json           # Model metadata and metrics
 └── notebooks/
     ├── power_demand_preprocessing.ipynb
