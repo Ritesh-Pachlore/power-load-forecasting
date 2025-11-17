@@ -5,6 +5,7 @@ import pickle
 import json
 from datetime import datetime
 import matplotlib.pyplot as plt
+import os
 
 # Set page configuration
 st.set_page_config(
@@ -37,253 +38,188 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+# Get the directory where the app is running
+APP_DIR = os.path.dirname(os.path.abspath(__file__))
+MODEL_PATH = os.path.join(APP_DIR, 'saved_models', 'best_model.pkl')
+MODEL_INFO_PATH = os.path.join(APP_DIR, 'saved_models', 'model_info.json')
+
 # Load model and metadata
 @st.cache_resource
 def load_model():
-    with open('saved_models/best_model.pkl', 'rb') as f:
-        model = pickle.load(f)
-    return model
+    try:
+        with open(MODEL_PATH, 'rb') as f:
+            model = pickle.load(f)
+        return model
+    except FileNotFoundError:
+        st.error(f"Model file not found at: {MODEL_PATH}")
+        return None
+    except Exception as e:
+        st.error(f"Error loading model: {e}")
+        return None
 
 @st.cache_resource
 def load_model_info():
-    with open('saved_models/model_info.json', 'r') as f:
-        info = json.load(f)
-    return info
+    try:
+        with open(MODEL_INFO_PATH, 'r') as f:
+            info = json.load(f)
+        return info
+    except FileNotFoundError:
+        st.error(f"Model info file not found at: {MODEL_INFO_PATH}")
+        return None
+    except Exception as e:
+        st.error(f"Error loading model info: {e}")
+        return None
 
-# Main app
-st.title("⚡ Power Load Forecasting System")
-st.markdown("---")
+# Load model and info on startup
+model = load_model()
+model_info = load_model_info()
 
-# Load model and info
-try:
-    model = load_model()
-    model_info = load_model_info()
-except Exception as e:
-    st.error(f"Error loading model: {e}")
+if model is None or model_info is None:
+    st.error("❌ Could not load model or model information. Please ensure both files exist in the saved_models directory.")
     st.stop()
 
-# Sidebar - Model Information
-with st.sidebar:
-    st.header("📊 Model Information")
-    st.write(f"**Model Type:** {model_info['model_type']}")
-    st.write(f"**R² Score:** {model_info['test_metrics']['r2']:.4f}")
-    st.write(f"**MAE:** {model_info['test_metrics']['mae']:.4f}")
-    
-    st.header("🎯 Features Used")
-    for feature in model_info['features']:
-        st.write(f"• {feature}")
+# Feature metadata from your JSON
+FEATURES = [
+    "temperature",
+    "hour",
+    "weekday",
+    "month",
+    "is_weekend",
+    "season"
+]
 
-# Main content area
-tab1, tab2, tab3 = st.tabs(["🔮 Make Prediction", "📈 Feature Importance", "ℹ️ About"])
+FEATURE_IMPORTANCE = {
+    "temperature": 0.6121999624181304,
+    "hour": 0.2540213827119532,
+    "weekday": 0.07235335797050527,
+    "month": 0.0281032336245292,
+    "is_weekend": 0.01914734096144482,
+    "season": 0.014174722313437447
+}
 
-with tab1:
-    st.header("Make a Prediction")
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.subheader("Input Parameters")
-        
-        temperature = st.slider(
-            "Temperature (°C)",
-            min_value=-10.0,
-            max_value=50.0,
-            value=20.0,
-            step=0.5,
-            help="Ambient temperature in Celsius"
-        )
-        
-        hour = st.selectbox(
-            "Hour of Day",
-            options=list(range(0, 24)),
-            index=12,
-            help="Hour (0-23)"
-        )
-        
-        weekday = st.selectbox(
-            "Day of Week",
-            options={0: "Monday", 1: "Tuesday", 2: "Wednesday", 3: "Thursday", 
-                    4: "Friday", 5: "Saturday", 6: "Sunday"},
-            help="Select day of week"
-        )
-        
-    with col2:
-        st.subheader("Additional Parameters")
-        
-        month = st.selectbox(
-            "Month",
-            options={1: "January", 2: "February", 3: "March", 4: "April",
-                    5: "May", 6: "June", 7: "July", 8: "August",
-                    9: "September", 10: "October", 11: "November", 12: "December"},
-            index=0,
-            help="Select month"
-        )
-        
-        is_weekend = st.selectbox(
-            "Is Weekend?",
-            options={0: "Weekday", 1: "Weekend"},
-            help="Select if it's a weekend or weekday"
-        )
-        
-        season = st.selectbox(
-            "Season",
-            options={0: "Winter", 1: "Spring", 2: "Summer", 3: "Fall"},
-            help="Select season"
-        )
-    
-    # Make prediction button
-    st.markdown("---")
-    
-    if st.button("🚀 Predict Power Load", use_container_width=True, type="primary"):
-        # Prepare input data
-        input_data = pd.DataFrame({
-            'temperature': [temperature],
-            'hour': [hour],
-            'weekday': [weekday],
-            'month': [month],
-            'is_weekend': [is_weekend],
-            'season': [season]
-        })
-        
+# =========================================================================================
+#                                   MAIN TITLE
+# =========================================================================================
+st.title("⚡ Power Load Demand Prediction App")
+st.write("This UI predicts **electricity demand** using your trained Random Forest model.")
+st.write("The model uses 6 features: temperature, hour, weekday, month, is_weekend, season.")
+
+# =========================================================================================
+#                            SECTION: SINGLE PREDICTION
+# =========================================================================================
+st.header("🔮 Single Prediction")
+st.write("Enter the values to predict the power demand.")
+
+col1, col2, col3 = st.columns(3)
+
+with col1:
+    temperature = st.number_input("Temperature", value=0.45, step=0.01)
+    hour = st.number_input("Hour (0–23)", min_value=0, max_value=23, value=14)
+
+with col2:
+    weekday = st.number_input("Weekday (0=Mon, 6=Sun)", min_value=0, max_value=6, value=2)
+    month = st.number_input("Month (1–12)", min_value=1, max_value=12, value=3)
+
+with col3:
+    is_weekend = st.selectbox("Is Weekend?", [0, 1], index=0)
+    season = st.selectbox("Season (encoded)", [0,1,2,3], index=1)
+
+predict_btn = st.button("Predict Demand")
+
+if predict_btn:
+    if model is None:
+        st.error("Upload your model first!")
+    else:
+        X = pd.DataFrame([{ 
+            "temperature": temperature,
+            "hour": hour,
+            "weekday": weekday,
+            "month": month,
+            "is_weekend": is_weekend,
+            "season": season
+        }])
         try:
-            # Make prediction
-            prediction = model.predict(input_data)[0]
-            
-            # Display result
-            st.markdown("<div class='prediction-result'>", unsafe_allow_html=True)
-            col1, col2 = st.columns(2)
-            with col1:
-                st.metric(
-                    label="Predicted Power Load",
-                    value=f"{prediction:.4f}",
-                    delta=None,
-                    delta_color="off"
-                )
-            with col2:
-                st.metric(
-                    label="Model Accuracy (R²)",
-                    value=f"{model_info['test_metrics']['r2']:.4f}",
-                    delta=None,
-                    delta_color="off"
-                )
-            st.markdown("</div>", unsafe_allow_html=True)
-            
-            # Show input summary
-            st.subheader("📋 Input Summary")
-            summary_df = pd.DataFrame({
-                'Parameter': ['Temperature', 'Hour', 'Weekday', 'Month', 'Is Weekend', 'Season'],
-                'Value': [f"{temperature}°C", f"{hour}:00", 
-                         list({0: "Monday", 1: "Tuesday", 2: "Wednesday", 3: "Thursday", 
-                              4: "Friday", 5: "Saturday", 6: "Sunday"}.values())[weekday],
-                         list({1: "January", 2: "February", 3: "March", 4: "April",
-                              5: "May", 6: "June", 7: "July", 8: "August",
-                              9: "September", 10: "October", 11: "November", 12: "December"}.values())[month-1],
-                         "Yes" if is_weekend else "No",
-                         list({0: "Winter", 1: "Spring", 2: "Summer", 3: "Fall"}.values())[season]]
-            })
-            st.dataframe(summary_df, use_container_width=True, hide_index=True)
-            
+            pred = model.predict(X)[0]
+            st.success(f"Predicted Demand: **{pred:.4f} units**")
         except Exception as e:
-            st.error(f"Error making prediction: {e}")
+            st.error(f"Prediction failed: {e}")
 
-with tab2:
-    st.header("📊 Feature Importance")
-    
-    importance_data = model_info['feature_importance']
-    features = list(importance_data.keys())
-    importance_scores = list(importance_data.values())
-    
-    # Create visualizations
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.subheader("Bar Chart")
-        fig, ax = plt.subplots(figsize=(10, 6))
-        colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b']
-        bars = ax.barh(features, importance_scores, color=colors)
-        ax.set_xlabel('Importance Score')
-        ax.set_title('Feature Importance in Power Load Prediction')
-        ax.invert_yaxis()
-        
-        # Add value labels
-        for bar in bars:
-            width = bar.get_width()
-            ax.text(width, bar.get_y() + bar.get_height()/2, 
-                   f'{width:.2%}', ha='left', va='center', fontsize=10)
-        
-        plt.tight_layout()
-        st.pyplot(fig)
-    
-    with col2:
-        st.subheader("Pie Chart")
-        fig, ax = plt.subplots(figsize=(10, 6))
-        colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b']
-        wedges, texts, autotexts = ax.pie(importance_scores, labels=features, autopct='%1.1f%%',
-                                           colors=colors, startangle=90)
-        ax.set_title('Feature Importance Distribution')
-        
-        for autotext in autotexts:
-            autotext.set_color('white')
-            autotext.set_fontweight('bold')
-        
-        plt.tight_layout()
-        st.pyplot(fig)
-    
-    # Display importance table
-    st.subheader("Importance Scores")
-    importance_df = pd.DataFrame({
-        'Feature': features,
-        'Importance Score': importance_scores,
-        'Percentage': [f"{score*100:.2f}%" for score in importance_scores]
-    }).sort_values('Importance Score', ascending=False)
-    
-    st.dataframe(importance_df, use_container_width=True, hide_index=True)
+# =========================================================================================
+#                               SECTION: BATCH PREDICTION
+# =========================================================================================
+st.header("📂 Batch Prediction (CSV)")
+st.write("Upload a CSV containing the exact model input columns:")
+st.code(", ".join(FEATURES))
 
-with tab3:
-    st.header("About This Application")
-    
-    st.markdown("""
-    ### 🎯 Purpose
-    This application uses a trained Random Forest model to predict power load demand based on various features.
-    
-    ### 📊 Model Details
-    - **Model Type:** Random Forest Regressor
-    - **Training Accuracy (R²):** {:.4f}
-    - **Mean Absolute Error (MAE):** {:.4f}
-    
-    ### 🔧 Features Used
-    The model considers the following features for prediction:
-    1. **Temperature** - Ambient temperature in Celsius (Most Important: {:.2f}%)
-    2. **Hour** - Hour of the day (0-23) ({:.2f}%)
-    3. **Weekday** - Day of the week (0-6) ({:.2f}%)
-    4. **Month** - Month of the year (1-12) ({:.2f}%)
-    5. **Is Weekend** - Binary flag for weekend ({:.2f}%)
-    6. **Season** - Season of the year ({:.2f}%)
-    
-    ### 💡 How to Use
-    1. Navigate to the "Make Prediction" tab
-    2. Adjust the input parameters using the sliders and dropdowns
-    3. Click "Predict Power Load" to get the prediction
-    
-    ### 📈 Insights
-    - Temperature is the most influential factor ({:.2f}% importance)
-    - Hour of day is the second most important factor ({:.2f}% importance)
-    - The model can predict power load with high accuracy
-    
-    ### 📧 About the Dataset
-    The model was trained on historical power load data with corresponding weather and temporal features.
-    """.format(
-        model_info['test_metrics']['r2'],
-        model_info['test_metrics']['mae'],
-        model_info['feature_importance']['temperature'] * 100,
-        model_info['feature_importance']['hour'] * 100,
-        model_info['feature_importance']['weekday'] * 100,
-        model_info['feature_importance']['month'] * 100,
-        model_info['feature_importance']['is_weekend'] * 100,
-        model_info['feature_importance']['season'] * 100,
-        model_info['feature_importance']['temperature'] * 100,
-        model_info['feature_importance']['hour'] * 100
-    ))
-    
-    st.markdown("---")
-    st.info("💡 **Tip:** Use the sidebar to view model metrics and features at any time.")
+csv_file = st.file_uploader("Upload CSV", type=["csv"])
+
+if csv_file is not None:
+    try:
+        df = pd.read_csv(csv_file)
+        st.subheader("Preview:")
+        st.dataframe(df.head())
+
+        # Validate columns
+        missing = [col for col in FEATURES if col not in df.columns]
+        if len(missing) > 0:
+            st.error(f"Missing required columns: {missing}")
+        else:
+            if model is None:
+                st.error("Upload your model first!")
+            else:
+                preds = model.predict(df[FEATURES])
+                df['predicted_demand'] = preds
+
+                st.success("Batch prediction completed ✔")
+                st.dataframe(df.head())
+
+                # Download button
+                st.download_button(
+                    label="Download Predictions CSV",
+                    data=df.to_csv(index=False).encode('utf-8'),
+                    file_name="predictions.csv",
+                    mime="text/csv"
+                )
+
+                # Plot
+                st.subheader("Predicted Demand Plot (First 200 Rows)")
+                fig, ax = plt.subplots(figsize=(8,3))
+                ax.plot(df['predicted_demand'][:200])
+                ax.set_ylabel("Demand")
+                ax.set_xlabel("Index")
+                st.pyplot(fig)
+
+    except Exception as e:
+        st.error(f"Error reading CSV: {e}")
+
+# =========================================================================================
+#                                SECTION: MODEL INFORMATION
+# =========================================================================================
+st.header("📊 Model Information")
+st.write("Random Forest model details based on your provided JSON.")
+
+colA, colB = st.columns(2)
+
+with colA:
+    st.subheader("Metrics")
+    st.write("**R² Score:** 0.8889")
+    st.write("**MAE:** 0.04539")
+
+with colB:
+    st.subheader("Feature Importance")
+    fi_df = pd.DataFrame({
+        "feature": list(FEATURE_IMPORTANCE.keys()),
+        "importance": list(FEATURE_IMPORTANCE.values())
+    }).sort_values("importance", ascending=False)
+    st.dataframe(fi_df)
+
+    fig, ax = plt.subplots(figsize=(6,3))
+    ax.bar(fi_df['feature'], fi_df['importance'])
+    ax.set_xticklabels(fi_df['feature'], rotation=45)
+    st.pyplot(fig)
+
+# =========================================================================================
+#                                         FOOTER
+# =========================================================================================
+st.markdown("---")
+st.write("Built using your model + Streamlit. Upload `.pkl`, enter values, and predict instantly.")
