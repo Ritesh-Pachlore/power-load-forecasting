@@ -1,0 +1,35 @@
+{
+    "best_model": "XGBoost",
+    "features": [
+        "temperature",
+        "hour",
+        "weekday",
+        "month",
+        "is_weekend",
+        "season"
+    ],
+    "timestamp": "2025-11-18 00:32:14",
+    "dataset_shape": [
+        102613,
+        11
+    ],
+    "train_test_split": {
+        "train_rows": 82090,
+        "test_rows": 20523,
+        "test_size": 0.2
+    },
+    "metrics": {
+        "r2": 0.941961661110269,
+        "mae": 0.03187810106387246,
+        "mse": 0.0020846763034516828,
+        "rmse": 0.04565825558923252
+    },
+    "feature_importance": {
+        "temperature": 0.10736680775880814,
+        "hour": 0.29238244891166687,
+        "weekday": 0.0057374523021280766,
+        "month": 0.018346887081861496,
+        "is_weekend": 0.4186094105243683,
+        "season": 0.1575569063425064
+    }
+}

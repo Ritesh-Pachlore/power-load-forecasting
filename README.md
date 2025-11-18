@@ -26,12 +26,14 @@ power-load-forecasting/
 ## Key Features
 
 ✨ **Machine Learning Model**
+
 - Algorithm: XGBoost Regressor
 - Training R² Score: 0.9420
 - Mean Absolute Error: 0.0319
 - Predicts normalized power demand (0-1 scale)
 
 📊 **Model Input Features** (6 features)
+
 - Temperature (°C)
 - Hour of Day (0-23)
 - Day of Week (Monday-Sunday)
@@ -40,6 +42,7 @@ power-load-forecasting/
 - Season (Winter, Spring, Summer, Fall)
 
 🎯 **Feature Importance Ranking**
+
 1. **Is Weekend** - 41.86% (Most Important)
 2. **Hour** - 29.24%
 3. **Season** - 15.76%
@@ -50,12 +53,14 @@ power-load-forecasting/
 ## Installation
 
 1. **Clone the repository:**
+
    ```bash
    git clone https://github.com/Ritesh-Pachlore/power-load-forecasting.git
    cd power-load-forecasting
    ```
 
 2. **Create Python environment (recommended):**
+
    ```bash
    conda create -n powerload_env python=3.11
    conda activate powerload_env
@@ -77,6 +82,7 @@ streamlit run app.py
 Then open your browser to `http://localhost:8501`
 
 **Features:**
+
 - 🔮 Single Prediction Tab: Input parameters and get instant predictions
 - 📈 Feature Importance Tab: Visualize model insights with charts
 - ℹ️ About Tab: Learn about the model and features
@@ -113,6 +119,7 @@ python src/train.py
 ```
 
 This will:
+
 - Load preprocessed data from `data/processed_load_data.csv`
 - Train multiple models (Linear, Ridge, Lasso, Random Forest, Gradient Boosting, ExtraTrees, XGBoost)
 - Save best model to `models/best_model.pkl`
@@ -121,14 +128,14 @@ This will:
 
 ## Model Performance
 
-| Metric | Value |
-|--------|-------|
-| R² Score | 0.9420 |
-| MAE | 0.0319 |
-| MSE | 0.0021 |
-| RMSE | 0.0457 |
+| Metric        | Value  |
+| ------------- | ------ |
+| R² Score      | 0.9420 |
+| MAE           | 0.0319 |
+| MSE           | 0.0021 |
+| RMSE          | 0.0457 |
 | Train Samples | 82,090 |
-| Test Samples | 20,523 |
+| Test Samples  | 20,523 |
 
 ## Dataset
 
@@ -149,24 +156,26 @@ This will:
 
 ## File Descriptions
 
-| File | Purpose |
-|------|---------|
-| `app.py` | Main Streamlit application with UI |
-| `src/train.py` | Model training pipeline |
-| `src/preprocess.py` | Data preprocessing utilities |
-| `models/best_model.pkl` | Trained XGBoost model |
-| `models/model_info.json` | Model metrics and metadata |
-| `data/processed_load_data.csv` | Preprocessed training data |
+| File                           | Purpose                            |
+| ------------------------------ | ---------------------------------- |
+| `app.py`                       | Main Streamlit application with UI |
+| `src/train.py`                 | Model training pipeline            |
+| `src/preprocess.py`            | Data preprocessing utilities       |
+| `models/best_model.pkl`        | Trained XGBoost model              |
+| `models/model_info.json`       | Model metrics and metadata         |
+| `data/processed_load_data.csv` | Preprocessed training data         |
 
 ## Tips for Best Results
 
 💡 **When Using Predictions:**
+
 - Weekend flag has highest impact (42%) on predictions
 - Hour of day is second most important (29%)
 - Predictions work best for typical weather conditions
 - Use actual temperature values for accurate forecasts
 
 ⚠️ **Limitations:**
+
 - Model trained on historical patterns only
 - May not predict extreme events accurately
 - Assumes stable power grid patterns

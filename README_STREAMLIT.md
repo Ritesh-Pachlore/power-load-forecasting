@@ -5,16 +5,19 @@ A complete web-based interface for the Power Load Forecasting model using Stream
 ## Features
 
 ✨ **Interactive Prediction Interface**
+
 - Real-time power load predictions
 - Intuitive sliders and dropdowns for input parameters
 - Instant visual feedback with metrics
 
 📊 **Model Analytics**
+
 - Feature importance visualization (bar and pie charts)
 - Model performance metrics (R² score: 0.889, MAE: 0.045)
 - Detailed feature analysis
 
 📈 **Comprehensive UI Tabs**
+
 - **Make Prediction Tab**: Input parameters and get instant predictions
 - **Feature Importance Tab**: Visualize which factors influence predictions most
 - **About Tab**: Learn about the model and how to use the application
@@ -22,6 +25,7 @@ A complete web-based interface for the Power Load Forecasting model using Stream
 ## Installation
 
 1. **Install dependencies:**
+
    ```bash
    pip install -r requirements.txt
    ```
@@ -44,7 +48,9 @@ The app will open in your default browser at `http://localhost:8501`
 ## Application Structure
 
 ### Make Prediction Tab
+
 Enter the following parameters to get a power load prediction:
+
 - **Temperature (°C)**: -10 to 50°C
 - **Hour of Day**: 0-23 (24-hour format)
 - **Day of Week**: Monday through Sunday
@@ -55,7 +61,9 @@ Enter the following parameters to get a power load prediction:
 Click "Predict Power Load" to generate a prediction with the input summary.
 
 ### Feature Importance Tab
+
 Visualizes the importance of each feature in the model:
+
 - **Temperature**: 61.22% (Most important)
 - **Hour**: 25.40%
 - **Weekday**: 7.24%
@@ -73,6 +81,7 @@ Visualizes the importance of each feature in the model:
 ## Tips for Usage
 
 💡 **Best Practices**:
+
 1. Temperature has the highest impact on predictions - pay attention to temperature values
 2. Hour of day is the second most important factor - predictions vary significantly by time
 3. The model achieves 89% accuracy on test data
@@ -81,12 +90,15 @@ Visualizes the importance of each feature in the model:
 ## Troubleshooting
 
 **Issue**: "Error loading model"
+
 - **Solution**: Ensure `best_model.pkl` and `model_info.json` exist in the `models/` directory
 
 **Issue**: "ModuleNotFoundError: No module named 'streamlit'"
+
 - **Solution**: Run `pip install -r requirements.txt` to install all dependencies
 
 **Issue**: Port 8501 already in use
+
 - **Solution**: Run `streamlit run app.py --server.port=8502`
 
 ## File Structure
@@ -112,16 +124,19 @@ Energy project/
 ## Additional Commands
 
 **Run with specific port:**
+
 ```bash
 streamlit run app.py --server.port=8502
 ```
 
 **Run in headless mode (for production):**
+
 ```bash
 streamlit run app.py --logger.level=error --client.showErrorDetails=false
 ```
 
 **View Streamlit configuration:**
+
 ```bash
 streamlit config show
 ```
